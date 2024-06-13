@@ -1,14 +1,38 @@
 version: "3.8"
 
+networks:
+  pub-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.96.0/24
+          gateway: 172.20.96.1
+    internal: false
+  
+  int-net:
+    driver: bridge
+    ipam:
+      driver: default
+      config: 
+        - subnet: 172.20.100.0/24
+          gateway: 172.20.100.1
+    internal: true 
+
 services:
   php:
     build:
       context: ./php
       dockerfile: Dockerfile
+    networks:
+      - pub-net
+      - int-net
     ports:
       - "8080:80"
     depends_on:
       - db
+
+
 
   db:
     image: postgres:latest
@@ -19,6 +43,8 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - int-net
 
 volumes:
   db_data:
